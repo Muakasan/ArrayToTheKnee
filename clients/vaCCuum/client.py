@@ -108,7 +108,6 @@ def processTurn(serverResponse):
         elif key == "cc":
             for enemy in enemyteamwithoutstun:
                 if not isStunned(enemy) and not isRooted(enemy):
-                    enemyteamwithoutstun.remove(enemy)
                     return enemy
         return target
 
@@ -128,10 +127,14 @@ def processTurn(serverResponse):
         if character.classId == "Paladin":
             if character.casting is None:
                 print "We can cast rite?"
+                if character.attributes.health * 4 < 3 * character.attributes.maxHealth and character.abilities[3] == 0:
+                    castSkill(character, character, 3)
+                    continue
                 ccTarget = getTarget("cc")
                 atkTarget = getTarget("attack")
-                if ccTarget and character.in_ability_range_of(ccTarget, gameMap, (14, False)) and character.abilities[14] == 0:
+                if ccTarget and character.in_ability_range_of(ccTarget, gameMap, 14) and character.abilities[14] == 0:
                     castSkill(character, ccTarget, 14)
+                    enemyteamwithoutstun.remove(ccTarget)
                 elif atkTarget and character.in_range_of(atkTarget, gameMap):
                     attackEnemy(character, atkTarget)
                 else:
@@ -153,6 +156,7 @@ def processTurn(serverResponse):
                 atkTarget = getTarget("attack")
                 if ccTarget and character.in_ability_range_of(ccTarget, gameMap, 1, False) and character.abilities[1] == 0:
                     castSkill(character, ccTarget, 1)
+                    enemyteamwithoutstun.remove(ccTarget)
                 elif atkTarget and character.in_range_of(atkTarget, gameMap):
                     attackEnemy(character, atkTarget)
                 else:
