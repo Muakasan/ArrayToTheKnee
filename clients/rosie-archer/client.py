@@ -15,13 +15,13 @@ from src.game.gamemap import *
 gameMap = GameMap()
 
 # --------------------------- SET THIS IS UP -------------------------
-teamName = "Test"
+teamName = "ArrayToTheKnee"
 # ---------------------------------------------------------------------
 
 # Set initial connection data
 def initialResponse():
 # ------------------------- CHANGE THESE VALUES -----------------------
-    return {'TeamName': arraytotheknee,
+    return {'TeamName': teamName,
             'Characters': [
                 {"CharacterName": "Archer1",
                  "ClassId": "Archer"},
@@ -64,7 +64,8 @@ def processTurn(serverResponse):
     if target:
         for character in myteam:
             if character.in_range_of(target, gameMap):
-                diffpo =abs(self.position-target.position)
+                diffpos = ( abs(character.position[0] - target.position[0]),
+                        abs(character.position[1] - target.position[1]) )
                 if diffpos[0]+diffpos[1] == 1 or (diffpos[0] == 1 and diffpos[1] == 1):
                     cast = False
                     for abilityId, cooldown in character.abilities.items():

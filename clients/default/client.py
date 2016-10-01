@@ -25,8 +25,8 @@ def initialResponse():
             'Characters': [
                 {"CharacterName": "Druid",
                  "ClassId": "Druid"},
-                {"CharacterName": "Archer",
-                 "ClassId": "Archer"},
+                {"CharacterName": "Sorcerer",
+                 "ClassId": "Sorcerer"},
                 {"CharacterName": "Warrior",
                  "ClassId": "Warrior"},
             ]}
