@@ -83,12 +83,22 @@ def processTurn(serverResponse):
 		              "CharacterId": character.id,
 		              "TargetId": target.id,
 		         })
-            else    : # Not in range, move towards
-                actions.append({
-                    "Action": "Move",
-                    "CharacterId": character.id,
-                    "TargetId": target.id,
-                })
+            else: # Not in range, move towards
+                if character.casting is None:
+		     cast = False
+	             if character.abilities[12] == 0:
+	                  actions.append({
+		               "Action": "Cast",
+		               "CharacterId": character.id,
+			       "TargetId": character.id,
+			       "AbilityId": 12,
+			  })
+		     else:
+		          actions.append({
+                               "Action": "Move",
+                               "CharacterId": character.id,
+                               "TargetId": target.id,
+                          })
 
     # Send actions to the server
     return {
