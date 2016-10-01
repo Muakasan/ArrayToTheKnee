@@ -22,15 +22,15 @@ teamName = "ArrayToTheKnee"
 def initialResponse():
     return {
         'TeamName': "arraytotheknee",
-        'Characters': [ {
-                "CharacterName": "DrewIt",
-                "ClassId": "Druid"
-            }, {
+        'Characters': [{
                 "CharacterName": "Ashe",
                 "ClassId": "Archer"
             }, {
                 "CharacterName": "Varus",
                 "ClassId": "Archer"
+            }, {
+                "CharacterName": "Druid",
+                "ClassId": "Druid"
             }
     ] }
 # }}}
@@ -81,6 +81,11 @@ def isRooted(hero):
 
 def isArcher(hero):
     return hero.classId == "Archer"
+def allAtMaxHealth(team):
+    for character in team:
+        if(character.attributes.health < character.attributes.maxHealth):
+            return False
+    return True
 # }}}
 
 # Determine actions to take on a given turn, given the server response
@@ -109,25 +114,26 @@ def processTurn(serverResponse):
     for enemy in enemyteam:
         if enemy.is_dead():
             continue
-        if least_health_enemy == None or enemy.attributes.health < least_health_enemy:
-            least_health_enemy = enemy.attributes.health
-            target = character
+        if least_health_enemy == None or enemy.attributes.health < least_health_enemy.attributes.health:
+            least_health_enemy = enemy
+            target = enemy
         # Determine what CC options the opponent has that can possibly hit you
 
     for ally in myteam:
         if ally.is_dead():
            continue
-        if least_health_enemy == None or ally.attributes.health < least_health_enemy:
-            least_health_enemy = ally.attributes.health
+        if least_health_ally == None or ally.attributes.health < least_health_ally.attributes.health:
+            least_health_ally = ally
 
     if target:
         for character in myteam:
+            print character.attributes.health
             # if character.in_range_of(target, gameMap):
             # Turns out in_range_of is a broken implementation. If will only
             # return True if 2 entities are in within the SMALLER range between
             # the 2 entities, not the largest...
             dist = manhattanDist(character, target)
-            print dist
+            #print dist
             if dist <= character.attributes.attackRange:
                 if 0 < dist and dist <= target.attributes.attackRange:
                     actions.append({
@@ -143,25 +149,29 @@ def processTurn(serverResponse):
                 })
             else:
                 #Druid Code
-                cast = False
-                for abilityId, cooldown in character.abilities.items():
-                    # Do I have an ability not on cooldown
-                    if cooldown == 0 and abilityId == 3:
-                        # If I can, then cast it
-                        ability = game_consts.abilitiesList[int(abilityId)]
-                        # Get ability
-                        print "Druid Heal"
-                        actions.append({
-                            "Action": "Cast",
-                            "CharacterId": character.id,
-                            # Am I buffing or debuffing? If buffing, target myself
-                            "TargetId": least_health_ally.id,
-                            "AbilityId": int(abilityId)
-                        })
-                        cast = True
-                        break
-                # Was I able to cast something? Either wise attack
-                if not cast:
+                didCast = False
+                if not allAtMaxHealth(myteam):
+                    for abilityId, cooldown in character.abilities.items():
+                        print str(cooldown) + " " + str(abilityId)
+                        # Do I have an ability not on cooldown
+                        if character.casting == None:
+                            if cooldown == 0 and int(abilityId) == 3:
+                                # If I can, then cast it
+                                ability = game_consts.abilitiesList[int(abilityId)]
+                                # Get ability
+                                print "Druid Heal"
+                                actions.append({
+                                    "Action": "Cast",
+                                    "CharacterId": character.id,
+                                    # Am I buffing or debuffing? If buffing, target myself
+                                    "TargetId": least_health_ally.id,
+                                    "AbilityId": int(abilityId)
+                                })
+                                didCast = True
+                        else:
+                            didCast = True
+                    # Was I able to cast something? Either wise attack
+                if not didCast:
                     print "Druid Attack"
                     actions.append({
                         "Action": "Attack",
