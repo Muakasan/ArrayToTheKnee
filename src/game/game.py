@@ -9,11 +9,11 @@ class InvalidPlayerException(Exception):
     pass
 class InvalidCharacterException(Exception):
     pass
-class InvalidTargetException(Exception):
-    pass
 class DeadCharacterException(Exception):
     pass
 class DeadTargetException(Exception):
+    pass
+class MoreThanOneActionException(Exception):
     pass
 
 class Game(object):
@@ -133,6 +133,11 @@ class Game(object):
                         if character.dead:
                             raise DeadCharacterException
 
+                        if character.actioned is False:
+                            character.actioned = True
+                        else:
+                            raise MoreThanOneActionException
+
                         # Get target character object
                         target = None
                         if targetId:
@@ -153,7 +158,7 @@ class Game(object):
                             if target:
                                 character.move_towards_target(target, self.map)
                             elif location:
-                                character.move_towards_position(location, self.map)
+                                character.move_towards_position(tuple(location), self.map)
                             else:
                                 actionResult["Message"] = "Invalid target and couldn't find location"
                         elif action == "Attack":
@@ -161,6 +166,9 @@ class Game(object):
                                 raise InvalidTargetException
 
                             character.in_range_of(target, self.map, True)
+
+                            if character.attributes.get_attribute("Stunned"):
+                                raise StunnedException
 
                             target.add_stat_change({
                                 "Target": 1,
@@ -206,6 +214,8 @@ class Game(object):
                         actionResult["Message"] = "Invalid new position"
                     except OutOfRangeException:
                         actionResult["Message"] = "Character out of range"
+                    except MoreThanOneActionException:
+                        actionResult["Message"] = "Character has more than one action"
                     except Exception as e:
                         raise  # Uncomment me to raise unhandled exceptions
                         actionResult["Message"] = "Unknown exception: " + str(e)
@@ -217,7 +227,11 @@ class Game(object):
         # Update everyone
         for teamId, team in self.teams.items():
             for character in team.characters:
-                character.update()
+                try:
+                    character.update()
+                except:
+                    pass
+
 
         # Determine winner if appropriate
         alive_teams = []
@@ -227,7 +241,7 @@ class Game(object):
                 if not character.dead:
                     alive_team = True
             if alive_team:
-                alive_teams.append(team.id)
+                alive_teams.append(team.name)
 
         print("Finished turn " + str(self.turnsExecuted))
 
@@ -254,6 +268,7 @@ class Game(object):
 
         return {
             "PlayerInfo": self.playerInfos[playerId],
+            "TurnNumber": self.turnsExecuted,
             "TurnResult": self.turnResults.get(playerId, [{"Status": "Fail", "Message": "No turn executed."}]),
             "Teams": [team.toJson() for teamId, team in self.teams.items()]
         }
@@ -262,6 +277,7 @@ class Game(object):
     def get_all_info(self):
         return {
             "PlayerInfos": self.playerInfos,
+            "TurnNumber": self.turnsExecuted,
             "TurnResults": [self.turnResults.get(pId, [{"Status": "Fail", "Message": "No turn executed."}]) for pId in self.playerInfos],
             "Teams": [team.toJson() for teamId, team in self.teams.items()]
         }
