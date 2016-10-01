@@ -125,7 +125,7 @@ def processTurn(serverResponse):
                 print "We can cast rite?"
                 ccTarget = getTarget("cc")
                 atkTarget = getTarget("attack")
-                if ccTarget and character.in_range_of(ccTarget, gameMap) and character.abilities[14] == 0:
+                if ccTarget and character.in_ability_range_of(character, target, gameMap, 14) and character.abilities[14] == 0:
                     castSkill(character, ccTarget, 14)
                 elif atkTarget and character.in_range_of(atkTarget, gameMap):
                     attackEnemy(character, atkTarget)
@@ -146,7 +146,7 @@ def processTurn(serverResponse):
                 print "Warrior can smash rite?"
                 ccTarget = getTarget("cc")
                 atkTarget = getTarget("attack")
-                if ccTarget and character.in_range_of(ccTarget, gameMap) and character.abilities[1] == 0:
+                if ccTarget and character.in_ability_range_of(character, target, gameMap, 1) and character.abilities[1] == 0:
                     castSkill(character, ccTarget, 1)
                 elif atkTarget and character.in_range_of(atkTarget, gameMap):
                     attackEnemy(character, atkTarget)
