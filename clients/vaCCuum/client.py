@@ -46,6 +46,7 @@ def processTurn(serverResponse):
     actions = []
     myteam = []
     enemyteam = []
+    enemyteamwithoutstun = []
 
     def healWeakest(hero, weakhero):
         actions.append({
@@ -89,22 +90,25 @@ def processTurn(serverResponse):
                 character = Character()
                 character.serialize(characterJson)
                 enemyteam.append(character)
+                enemyteamwithoutstun.append(character)
 # ------------------ You shouldn't change above but you can ---------------
 
     # Choose a target
     def getTarget(key):
         target = None
         least_health = None
-        for character in enemyteam:
-            if character.is_dead():
-                continue
-            if key == "attack":
-                if least_health == None or character.attributes.health < least_health:
-                    least_health = character.attributes.health
-                    target = character
-            elif key == "cc":
-                if not isStunned(character) and not isRooted(character):
-                    return target
+        if key == "attack":
+            for enemy in enemyteam:
+                if enemy.is_dead():
+                    continue
+                if least_health == None or enemy.attributes.health < least_health:
+                    least_health = enemy.attributes.health
+                    target = enemy
+            return target
+        elif key == "cc":
+            for enemy in enemyteamwithoutstun:
+                if not isStunned(enemy) and not isRooted(enemy):
+                    return enemy
         return target
 
     #Find lowest hp team member
@@ -119,38 +123,47 @@ def processTurn(serverResponse):
 
     # If we found a target
     for character in myteam:
-    #If current character is Paladin
-        if character.id % 3 == 1:
+        #If current character is Paladin
+        if character.classId == "Paladin":
             if character.casting is None:
-                cast = False
-                target = getTarget("cc")
-                if target and character.in_range_of(target, gameMap) and character.abilities[14] == 0:
-                    castSkill(character, target, 14)
-                elif target and character.in_range_of(target, gameMap):
-                    target = getTarget("attack")
-                    attackEnemy(character, target)
-                else: # Not in range, move towards
-                    target = getTarget("attack")
-                    moveHero(character, target)
+                print "We can cast rite?"
+                if character.attributes.health * 4 < 3 * character.attributes.maxHealth and character.abilities[3] == 0:
+                    castSkill(character, character, 3)
+                    continue
+                ccTarget = getTarget("cc")
+                atkTarget = getTarget("attack")
+                if ccTarget and character.in_ability_range_of(ccTarget, gameMap, 14) and character.abilities[14] == 0:
+                    castSkill(character, ccTarget, 14)
+                    enemyteamwithoutstun.remove(ccTarget)
+                elif atkTarget and character.in_range_of(atkTarget, gameMap):
+                    attackEnemy(character, atkTarget)
+                else:
+                    if ccTarget:
+                        moveHero(character, ccTarget)
+                    else:
+                        moveHero(character, atkTarget)
             else:
                 target = getTarget("attack")
                 if target and character.in_range_of(target, gameMap):
                     attackEnemy(character, target)
-                else: # Not in range, move towards
+                else:
                     moveHero(character, target)
-    #If current character is Warrior
-        if character.id % 3 in [0, 2]:
+        #If current character is Warrior
+        if character.classId == "Warrior":
             if character.casting is None:
-                cast = False
-                target = getTarget("cc")
-                if target and character.in_range_of(target, gameMap) and character.abilities[1] == 0:
-                    castSkill(character, target, 1)
-                elif target and character.in_range_of(target, gameMap):
-                    target = getTarget("attack")
-                    attackEnemy(character, target)
-                else: # Not in range, move towards
-                    target = getTarget("attack")
-                    moveHero(character, target)
+                print "Warrior can smash rite?"
+                ccTarget = getTarget("cc")
+                atkTarget = getTarget("attack")
+                if ccTarget and character.in_ability_range_of(ccTarget, gameMap, 1, False) and character.abilities[1] == 0:
+                    castSkill(character, ccTarget, 1)
+                    enemyteamwithoutstun.remove(ccTarget)
+                elif atkTarget and character.in_range_of(atkTarget, gameMap):
+                    attackEnemy(character, atkTarget)
+                else:
+                    if ccTarget:
+                        moveHero(character, ccTarget)
+                    else:
+                        moveHero(character, atkTarget)
             else:
                 target = getTarget("attack")
                 if target and character.in_range_of(target, gameMap):

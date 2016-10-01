@@ -18,7 +18,11 @@ gameMap = GameMap()
 teamName = "RushWarriors"
 enemyMark = {}
 # ---------------------------------------------------------------------
+def manhattanDist(hero1, hero2): # Cuz DotA > League
+    pos1 = hero1.position
+    pos2 = hero2.position
 
+    return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
 # Set initial connection data
 def initialResponse():
 # ------------------------- CHANGE THESE VALUES -----------------------
