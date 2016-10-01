@@ -38,8 +38,8 @@ def initialResponse():
 # {{{ Helper Functions
 
 def getQuadrant(hero):
-    x = hero1.position[0]
-    y = hero1.position[1]
+    x = hero.position[0]
+    y = hero.position[1]
     if 0 <= x and x <= 2 and 0 <= y and y <= 2:
         return 2
     elif 0 <= x and x <= 2 and 2 <= y and y <= 4:
@@ -152,7 +152,7 @@ def processTurn(serverResponse):
             dist = manhattanDist(character, target)
             # print dist
             if dist <= character.attributes.attackRange:
-                if dist == 0:
+                if 0 <= dist and dist <= 1:
                     if character.abilities[12] == 0:
                         character.sprintDestination = getSprintDestination(character)
                         actions.append({
@@ -167,7 +167,7 @@ def processTurn(serverResponse):
                             "Location" : character.sprintDestination,
                             "CharacterId" : character.id
                         })
-                if 0 < dist and dist < character.attributes.attackRange:
+                elif 1 < dist and dist < character.attributes.attackRange:
                     # print "Moving"
                     # print getKiteLoc(character, target)
                     actions.append({
