@@ -68,12 +68,22 @@ def processTurn(serverResponse):
         for character in myteam:
             # If I am in range, either move towards target
             if character.in_range_of(target, gameMap):
-                actions.append({
-                     "Action": "Attack",
-		     "CharacterID": character.id,
-		     "TargetID": target.id,
-		})
-            else: # Not in range, move towards
+                if character.casting is None:
+		    cast = False
+	            if character.abilities[11] == 0:
+		          actions.append({
+		               "Action": "Cast",
+		   	       "CharacterId": character.id,
+			       "TargetId": target.id,
+			       "AbilityId": 11,
+			       })
+                    else:
+		         actions.append({
+                              "Action": "Attack",
+		              "CharacterId": character.id,
+		              "TargetId": target.id,
+		         })
+            else    : # Not in range, move towards
                 actions.append({
                     "Action": "Move",
                     "CharacterId": character.id,
