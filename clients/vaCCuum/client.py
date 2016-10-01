@@ -104,7 +104,7 @@ def processTurn(serverResponse):
                     target = character
             elif key == "cc":
                 if not isStunned(character) and not isRooted(character):
-                    return target
+                    return character
         return target
 
     #Find lowest hp team member
