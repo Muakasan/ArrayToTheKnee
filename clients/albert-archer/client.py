@@ -1,4 +1,6 @@
 #!/usr/bin/python2
+
+# {{{ Imports
 import socket
 import json
 import os
@@ -10,46 +12,83 @@ sys.path.append("../..")
 import src.game.game_constants as game_consts
 from src.game.character import *
 from src.game.gamemap import *
+# }}}
 
-# Game map that you can use to query 
 gameMap = GameMap()
 
-# --------------------------- SET THIS IS UP -------------------------
-teamName = "Test"
-# ---------------------------------------------------------------------
+teamName = "ArrayToTheKnee"
 
-# Setup helper variables
-actions = []
-myteam = []
-enemyteam = []
-
-# Set initial connection data
+# {{{ Team Composition Setup
 def initialResponse():
-# ------------------------- CHANGE THESE VALUES -----------------------
-    return {'TeamName': "arraytotheknee",
-            'Characters': [
-                {"CharacterName": "Archer1",
-                 "ClassId": "Archer"},
-                {"CharacterName": "Archer2",
-                 "ClassId": "Archer"},
-                {"CharacterName": "Druid1",
-                 "ClassId": "Druid"},
-            ]}
-# ---------------------------------------------------------------------
+    return {
+        'TeamName': "arraytotheknee",
+        'Characters': [ {
+                "CharacterName": "DrewIt",
+                "ClassId": "Druid"
+            }, {
+                "CharacterName": "Ashe",
+                "ClassId": "Archer"
+            }, {
+                "CharacterName": "Varus",
+                "ClassId": "Archer"
+            }
+    ] }
+# }}}
 
-def getLowestHealth():
-    lowestHealthChar = myteam[0]
-    for character in myteam:
-        if character.attribute.get_attribute(character, "Health") < lowestHealthChar.attributes.get_attribute(lowestHealthChar, "Health"):
-            lowestHealthChar = character;
-    return lowestHealthChar
+# {{{ Helper Functions
 
+def manhattanDist(hero1, hero2): # Cuz DotA > League
+    pos1 = hero1.position
+    pos2 = hero2.position
+    return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
+
+def getKiteLoc(hero, villain):
+    myPos = hero.position
+    vilPos = villain.position
+    newX = min(myPos[0] + (myPos[0] - vilPos[0]), 4)
+    newY = min(myPos[1] + (myPos[1] - vilPos[1]), 4)
+    # We have edge cases
+    if myPos == (0, 0):
+        if vilPos[0] == 0:
+            newX = 1
+        elif vilPos[1] == 0:
+            newY = 1
+    elif myPos == (0, 4):
+        if vilPos[0] == 0:
+            newX = 1
+        elif vilPos[1] == 4:
+            newY = 3
+    elif myPos == (4, 4):
+        if vilPos[0] == 4:
+            newX = 3
+        elif vilPos[1] == 4:
+            newY = 3
+    elif myPos == (4, 0):
+        if vilPos[0] == 4:
+            newX = 3
+        if vilPos[1] == 0:
+            newY = 1
+    return (newX, newY)
+
+def isStunned(hero):
+    return hero.attributes.get_attribute("Stunned")
+
+def isSilenced(hero):
+    return hero.attributes.get_attribute("Silenced")
+
+def isRooted(hero):
+    return hero.attributes.get_attribute("Rooted")
+
+def isArcher(hero):
+    return hero.classId == "Archer"
+# }}}
 
 # Determine actions to take on a given turn, given the server response
 def processTurn(serverResponse):
-# --------------------------- CHANGE THIS SECTION -------------------------
-
-    # Find each team and serialize the objects
+# {{{ Parse Server Response
+    actions = []
+    myteam = []
+    enemyteam = []
     for team in serverResponse["Teams"]:
         if team["Id"] == serverResponse["PlayerInfo"]["TeamId"]:
             for characterJson in team["Characters"]:
@@ -61,58 +100,81 @@ def processTurn(serverResponse):
                 character = Character()
                 character.serialize(characterJson)
                 enemyteam.append(character)
-# ------------------ You shouldn't change above but you can ---------------
-
+# }}}
     # Choose a target
     target = None
-    for character in enemyteam:
-        if not character.is_dead():
+    least_health_enemy = None
+    least_health_ally = None
+    opponent_CC = { "stun" : False, "silence" : False, "root" : False }
+    for enemy in enemyteam:
+        if enemy.is_dead():
+            continue
+        if least_health_enemy == None or enemy.attributes.health < least_health_enemy:
+            least_health_enemy = enemy.attributes.health
             target = character
-            break
+        # Determine what CC options the opponent has that can possibly hit you
 
-    # If we found a target
+    for ally in myteam:
+        if ally.is_dead():
+           continue
+        if least_health_enemy == None or ally.attributes.health < least_health_enemy:
+            least_health_enemy = ally.attributes.health
+
     if target:
         for character in myteam:
-            # If I am in range, attack those fuckers
-            if True: #character.classId == "Archer":
-                if character.in_range_of(target, gameMap):
+            # if character.in_range_of(target, gameMap):
+            # Turns out in_range_of is a broken implementation. If will only
+            # return True if 2 entities are in within the SMALLER range between
+            # the 2 entities, not the largest...
+            dist = manhattanDist(character, target)
+            print dist
+            if dist <= character.attributes.attackRange:
+                if 0 < dist and dist <= target.attributes.attackRange:
+                    actions.append({
+                        "Action": "Move",
+                        "Location": getKiteLoc(character, target)
+                    })
+            if(isArcher(character)):
+                print "Archer Attack"
+                actions.append({
+                    "Action": "Attack",
+                    "CharacterId": character.id,
+                    "TargetId": target.id
+                })
+            else:
+                #Druid Code
+                cast = False
+                for abilityId, cooldown in character.abilities.items():
+                    # Do I have an ability not on cooldown
+                    if cooldown == 0 and abilityId == 3:
+                        # If I can, then cast it
+                        ability = game_consts.abilitiesList[int(abilityId)]
+                        # Get ability
+                        print "Druid Heal"
+                        actions.append({
+                            "Action": "Cast",
+                            "CharacterId": character.id,
+                            # Am I buffing or debuffing? If buffing, target myself
+                            "TargetId": least_health_ally.id,
+                            "AbilityId": int(abilityId)
+                        })
+                        cast = True
+                        break
+                # Was I able to cast something? Either wise attack
+                if not cast:
+                    print "Druid Attack"
                     actions.append({
                         "Action": "Attack",
                         "CharacterId": character.id,
                         "TargetId": target.id,
-                        })
-                else: # Not in range, stand still
-                    pass
-            else:
-                #this is a druid
-                if character.can_use_ability(character, (3, False,)):
-                    actions.append({
-                    "Action": "Cast",
-                    "CharacterId": character.id,
-                     # Am I buffing or debuffing? If buffing, target myself
-                    "TargetId": character.id,
-                    "AbilityId": 3
                     })
-                else:
-                    if character.in_range_of(target, gameMap):
-                        actions.append({
-                            "Action": "Attack",
-                            "CharacterId": character.id,
-                            "TargetId": target.id,
-                        })
-                    else:  # Not in range, stand still
-                        pass
 
-
-    # Send actions to the server
     return {
         'TeamName': teamName,
         'Actions': actions
     }
-# ---------------------------------------------------------------------
 
-# Main method
-# @competitors DO NOT MODIFY
+# {{{ Main method. Do NOT MODIFY!
 if __name__ == "__main__":
     # Config
     conn = ('localhost', 1337)
@@ -159,3 +221,5 @@ if __name__ == "__main__":
             raise  # Not error we are looking for
         pass  # Handle error here.
     s.close()
+# }}}
+
