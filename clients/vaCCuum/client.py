@@ -46,6 +46,7 @@ def processTurn(serverResponse):
     actions = []
     myteam = []
     enemyteam = []
+    enemyteamwithoutstun = []
 
     def healWeakest(hero, weakhero):
         actions.append({
@@ -89,22 +90,25 @@ def processTurn(serverResponse):
                 character = Character()
                 character.serialize(characterJson)
                 enemyteam.append(character)
+                enemyteamwithoutstun.append(character)
 # ------------------ You shouldn't change above but you can ---------------
 
     # Choose a target
     def getTarget(key):
         target = None
         least_health = None
-        for character in enemyteam:
-            if character.is_dead():
-                continue
-            if key == "attack":
-                if least_health == None or character.attributes.health < least_health:
-                    least_health = character.attributes.health
-                    target = character
-            elif key == "cc":
-                if not isStunned(character) and not isRooted(character):
-                    return character
+        if key == "attack":
+            for enemy in enemyteam:
+                if enemy.is_dead():
+                    continue
+                if least_health == None or enemy.attributes.health < least_health:
+                    least_health = enemy.attributes.health
+                    target = enemy
+            return target
+        elif key == "cc":
+            for enemy in enemyteamwithoutstun:
+                if not isStunned(enemy) and not isRooted(enemy):
+                    return enemy
         return target
 
     #Find lowest hp team member
@@ -120,13 +124,17 @@ def processTurn(serverResponse):
     # If we found a target
     for character in myteam:
         #If current character is Paladin
-        if character.id % 3 == 1:
+        if character.classId == "Paladin":
             if character.casting is None:
                 print "We can cast rite?"
+                if character.attributes.health * 4 < 3 * character.attributes.maxHealth and character.abilities[3] == 0:
+                    castSkill(character, character, 3)
+                    continue
                 ccTarget = getTarget("cc")
                 atkTarget = getTarget("attack")
-                if ccTarget and character.in_ability_range_of(character, target, gameMap, 14) and character.abilities[14] == 0:
+                if ccTarget and character.in_ability_range_of(ccTarget, gameMap, 14) and character.abilities[14] == 0:
                     castSkill(character, ccTarget, 14)
+                    enemyteamwithoutstun.remove(ccTarget)
                 elif atkTarget and character.in_range_of(atkTarget, gameMap):
                     attackEnemy(character, atkTarget)
                 else:
@@ -141,13 +149,14 @@ def processTurn(serverResponse):
                 else:
                     moveHero(character, target)
         #If current character is Warrior
-        if character.id % 3 in [0, 2]:
+        if character.classId == "Warrior":
             if character.casting is None:
                 print "Warrior can smash rite?"
                 ccTarget = getTarget("cc")
                 atkTarget = getTarget("attack")
-                if ccTarget and character.in_ability_range_of(character, target, gameMap, 1) and character.abilities[1] == 0:
+                if ccTarget and character.in_ability_range_of(ccTarget, gameMap, 1, False) and character.abilities[1] == 0:
                     castSkill(character, ccTarget, 1)
+                    enemyteamwithoutstun.remove(ccTarget)
                 elif atkTarget and character.in_range_of(atkTarget, gameMap):
                     attackEnemy(character, atkTarget)
                 else:

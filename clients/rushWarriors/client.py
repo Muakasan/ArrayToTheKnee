@@ -11,11 +11,12 @@ import src.game.game_constants as game_consts
 from src.game.character import *
 from src.game.gamemap import *
 
-# Game map that you can use to query 
+# Game map that you can use to query
 gameMap = GameMap()
 
 # --------------------------- SET THIS IS UP -------------------------
 teamName = "RushWarriors"
+enemyMark = {}
 # ---------------------------------------------------------------------
 def manhattanDist(hero1, hero2): # Cuz DotA > League
     pos1 = hero1.position
@@ -29,13 +30,18 @@ def initialResponse():
             'Characters': [
                 {"CharacterName": "Warrior",
                  "ClassId": "Warrior"},
-                {"CharacterName": "Warrior",
+                {"CharacterName": "Warrior2",
                  "ClassId": "Warrior"},
-                {"CharacterName": "Warrior",
+                {"CharacterName": "Warrior3",
                  "ClassId": "Warrior"},
             ]}
 # ---------------------------------------------------------------------
+#helper functions
+def isStunned(hero):
+    return hero.attributes.get_attribute("Stunned")
 
+def isRooted(hero):
+    return hero.attributes.get_attribute("Rooted")
 # Determine actions to take on a given turn, given the server response
 def processTurn(serverResponse):
 # --------------------------- CHANGE THIS SECTION -------------------------
@@ -43,6 +49,28 @@ def processTurn(serverResponse):
     actions = []
     myteam = []
     enemyteam = []
+
+    def attackEnemy(hero, enemy):
+        actions.append({
+            "Action": "Attack",
+            "CharacterId": hero.id,
+            "TargetId": enemy.id,
+             })
+
+    def castSkill(hero, enemy, num):
+        actions.append({
+            "Action": "Cast",
+            "CharacterId": hero.id,
+            "TargetId": enemy.id if game_consts.abilitiesList[num]["StatChanges"][0]["Change"] < 0 else hero.id,
+            "AbilityId": num,
+             })
+
+    def moveHero(hero, enemy):
+        actions.append({
+            "Action": "Move",
+            "CharacterId": hero.id,
+            "TargetId": enemy.id,
+             })
     # Find each team and serialize the objects
     for team in serverResponse["Teams"]:
         if team["Id"] == serverResponse["PlayerInfo"]["TeamId"]:
@@ -55,31 +83,51 @@ def processTurn(serverResponse):
                 character = Character()
                 character.serialize(characterJson)
                 enemyteam.append(character)
+
 # ------------------ You shouldn't change above but you can ---------------
 
-    # Choose a target
-    target = None
     for character in enemyteam:
-        if not character.is_dead():
-            target = character
-            break
+        if not character.is_dead() and not isStunned(character) and not isRooted(character):
+            enemyMark[character.id%3] = 0
+        else:
+            enemyMark[character.id%3] = 1
+
+    # Choose a target
+    # Choose the lowest HP target
+    def getTarget(key):
+        target = None
+        least_health = None
+
+        for character in enemyteam:
+            if character.is_dead():
+                continue
+            if least_health == None or character.attributes.health < least_health:
+                least_health = character.attributes.health
+                target = character
+
+        if key == "attack":
+            return target
+        elif key == "cc":
+            for character in enemyteam:
+                if enemyMark.get(character.id%3) == 0:
+                    return character
+        return target
 
     # If we found a target
-    if target:
-        for character in myteam:
-            # If I am in range, attack
-            if character.in_range_of(target, gameMap):
-                   actions.append({
-                       "Action": "Attack",
-                       "CharacterId": character.id,
-                       "TargetId": target.id
-                     })
+    for character in myteam:
+        # If I am in range, attack
+        ccTarget = getTarget("cc")
+        atkTarget = getTarget("attack")
+
+        if character.casting is None:
+            cast = False
+            if ccTarget and character.in_range_of(ccTarget, gameMap) and character.abilities[1] == 0:
+                castSkill(character, ccTarget, 1)
+                enemyMark[ccTarget.id % 3] = 1
+            elif atkTarget and character.in_range_of(atkTarget, gameMap):
+                attackEnemy(character, atkTarget)
             else: # Not in range, move towards
-                actions.append({
-                    "Action": "Move",
-                    "CharacterId": character.id,
-                    "TargetId": target.id,
-                })
+                moveHero(character, atkTarget)
 
     # Send actions to the server
     return {
