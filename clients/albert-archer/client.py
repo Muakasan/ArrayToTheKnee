@@ -18,6 +18,11 @@ gameMap = GameMap()
 teamName = "Test"
 # ---------------------------------------------------------------------
 
+# Setup helper variables
+actions = []
+myteam = []
+enemyteam = []
+
 # Set initial connection data
 def initialResponse():
 # ------------------------- CHANGE THESE VALUES -----------------------
@@ -27,18 +32,23 @@ def initialResponse():
                  "ClassId": "Archer"},
                 {"CharacterName": "Archer2",
                  "ClassId": "Archer"},
-                {"CharacterName": "Archer3",
-                 "ClassId": "Archer"},
+                {"CharacterName": "Druid1",
+                 "ClassId": "Druid"},
             ]}
 # ---------------------------------------------------------------------
+
+def getLowestHealth():
+    lowestHealthChar = myteam[0]
+    for character in myteam:
+        if character.attribute.get_attribute(character, "Health") < lowestHealthChar.attributes.get_attribute(lowestHealthChar, "Health"):
+            lowestHealthChar = character;
+    return lowestHealthChar
+
 
 # Determine actions to take on a given turn, given the server response
 def processTurn(serverResponse):
 # --------------------------- CHANGE THIS SECTION -------------------------
-    # Setup helper variables
-    actions = []
-    myteam = []
-    enemyteam = []
+
     # Find each team and serialize the objects
     for team in serverResponse["Teams"]:
         if team["Id"] == serverResponse["PlayerInfo"]["TeamId"]:
@@ -63,15 +73,36 @@ def processTurn(serverResponse):
     # If we found a target
     if target:
         for character in myteam:
-            # If I am in range, attack those fkrs
-            if character.in_range_of(target, gameMap):
-                actions.append({
-                    "Action": "Attack",
+            # If I am in range, attack those fuckers
+            if True: #character.classId == "Archer":
+                if character.in_range_of(target, gameMap):
+                    actions.append({
+                        "Action": "Attack",
+                        "CharacterId": character.id,
+                        "TargetId": target.id,
+                        })
+                else: # Not in range, stand still
+                    pass
+            else:
+                #this is a druid
+                if character.can_use_ability(character, (3, False,)):
+                    actions.append({
+                    "Action": "Cast",
                     "CharacterId": character.id,
-                    "TargetId": target.id,
+                     # Am I buffing or debuffing? If buffing, target myself
+                    "TargetId": character.id,
+                    "AbilityId": 3
                     })
-            else: # Not in range, stand still
-                 pass
+                else:
+                    if character.in_range_of(target, gameMap):
+                        actions.append({
+                            "Action": "Attack",
+                            "CharacterId": character.id,
+                            "TargetId": target.id,
+                        })
+                    else:  # Not in range, stand still
+                        pass
+
 
     # Send actions to the server
     return {

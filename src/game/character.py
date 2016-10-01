@@ -165,7 +165,7 @@ class Character(object):
         # Does this character actually have the ability?
         if ability_id not in self.abilities:
             if ret:
-                raise InvalidAbilityIdException
+                return False #InvalidAbilityIdException
             else:
                 return False
         # Is the ability on cool down
