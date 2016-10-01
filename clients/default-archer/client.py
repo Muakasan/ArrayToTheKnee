@@ -37,17 +37,42 @@ def initialResponse():
 
 # {{{ Helper Functions
 
+def getQuadrant(hero):
+    x = hero1.position[0]
+    y = hero1.position[1]
+    if 0 <= x and x <= 2 and 0 <= y and y <= 2:
+        return 2
+    elif 0 <= x and x <= 2 and 2 <= y and y <= 4:
+        return 1
+    elif 2 <= x and x <= 4 and 0 <= y and y <= 2:
+        return 3
+    elif 2 <= x and x <= 4 and 2 <= y and y <= 4:
+        return 4
+    else:
+        return "wtf lulz where the fuck are you"
+
 def manhattanDist(hero1, hero2): # Cuz DotA > League
     pos1 = hero1.position
     pos2 = hero2.position
     return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
+
+def getSprintDestination(hero):
+    quadrant = getQuadrant(hero)
+    if quadrant == 1:
+        return (4, 0)
+    elif quadrant == 2:
+        return (4, 4)
+    elif quadrant == 3:
+        return (0, 4)
+    elif quadrant  == 4:
+        return (0, 0)
 
 def getKiteLoc(hero, villain):
     myPos = hero.position
     vilPos = villain.position
     newX = min(myPos[0] + (myPos[0] - vilPos[0]), 4)
     newY = min(myPos[1] + (myPos[1] - vilPos[1]), 4)
-    # We have edge cases 
+    # We have edge cases
     if myPos == (0, 0):
         if vilPos[0] == 0:
             newX = 1
@@ -120,7 +145,6 @@ def processTurn(serverResponse):
 
     if target:
         for character in myteam:
-
             # if character.in_range_of(target, gameMap):
             # Turns out in_range_of is a broken implementation. If will only
             # return True if 2 entities are in within the SMALLER range between
@@ -128,7 +152,22 @@ def processTurn(serverResponse):
             dist = manhattanDist(character, target)
             # print dist
             if dist <= character.attributes.attackRange:
-                if 0 <= dist and dist < character.attributes.attackRange:
+                if dist == 0:
+                    if character.abilities[12] == 0:
+                        character.sprintDestination = getSprintDestination(character)
+                        actions.append({
+                            "Action" : "Cast",
+                            "CharacterId" : character.id,
+                            "TargetId" : character.id,
+                            "AbilityId" : 12
+                        })
+                    else:
+                        actions.append({
+                            "Action" : "Move",
+                            "Location" : character.sprintDestination,
+                            "CharacterId" : character.id
+                        })
+                if 0 < dist and dist < character.attributes.attackRange:
                     # print "Moving"
                     # print getKiteLoc(character, target)
                     actions.append({
