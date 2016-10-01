@@ -42,7 +42,7 @@ def manhattanDist(hero1, hero2): # Cuz DotA > League
     pos2 = hero2.position
     return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
 
-def getKitLoc(hero, villain):
+def getKiteLoc(hero, villain):
     myPos = hero.position
     vilPos = villain.position
     newX = min(myPos[0] + (myPos[0] - vilPos[0]), 4)
@@ -51,7 +51,7 @@ def getKitLoc(hero, villain):
     if myPos == (0, 0):
         if vilPos[0] == 0:
             newX = 1
-        elif visPos[1] == 0:
+        elif vilPos[1] == 0:
             newY = 1
     elif myPos == (0, 4):
         if vilPos[0] == 0:
