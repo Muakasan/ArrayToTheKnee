@@ -18,6 +18,8 @@ gameMap = GameMap()
 
 teamName = "DefaultArcher"
 
+destinations = {}
+
 # {{{ Team Composition Setup
 def initialResponse():
     return {
@@ -154,7 +156,7 @@ def processTurn(serverResponse):
             if dist <= character.attributes.attackRange:
                 if 0 <= dist and dist <= 1:
                     if character.abilities[12] == 0:
-                        character.sprintDestination = getSprintDestination(character)
+                        destinations[character.id] = getSprintDestination(character)
                         actions.append({
                             "Action" : "Cast",
                             "CharacterId" : character.id,
@@ -164,7 +166,8 @@ def processTurn(serverResponse):
                     else:
                         actions.append({
                             "Action" : "Move",
-                            "Location" : character.sprintDestination,
+                            "Location" : destinations.get(character.id,
+                                getSprintDestination(character)),
                             "CharacterId" : character.id
                         })
                 elif 1 < dist and dist < character.attributes.attackRange:
