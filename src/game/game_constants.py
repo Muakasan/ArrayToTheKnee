@@ -120,7 +120,7 @@ abilitiesList = [
             "Time": 0
         }],
         "CastTime"  : 0,
-        "Cooldown"  : 10,
+        "Cooldown"  : 30,
         "Range"     : 0,
     },
     {   #1 melee stun 
@@ -303,11 +303,11 @@ abilitiesList = [
         "StatChanges": [{
             "Target": 1,
             "Attribute": "Health",
-            "Change": -150,
-            "Time": 3
+            "Change": -200,
+            "Time": 0
         }],
         "CastTime"  : 2,
-        "Cooldown"  : 8,
-        "Range"     : 1,
+        "Cooldown"  : 5,
+        "Range"     : 2,
     },
 ]
