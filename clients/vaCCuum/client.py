@@ -119,38 +119,42 @@ def processTurn(serverResponse):
 
     # If we found a target
     for character in myteam:
-    #If current character is Paladin
+        #If current character is Paladin
         if character.id % 3 == 1:
             if character.casting is None:
-                cast = False
-                target = getTarget("cc")
-                if target and character.in_range_of(target, gameMap) and character.abilities[14] == 0:
-                    castSkill(character, target, 14)
-                elif target and character.in_range_of(target, gameMap):
-                    target = getTarget("attack")
-                    attackEnemy(character, target)
-                else: # Not in range, move towards
-                    target = getTarget("attack")
-                    moveHero(character, target)
+                print "We can cast rite?"
+                ccTarget = getTarget("cc")
+                atkTarget = getTarget("attack")
+                if ccTarget and character.in_range_of(ccTarget, gameMap) and character.abilities[14] == 0:
+                    castSkill(character, ccTarget, 14)
+                elif atkTarget and character.in_range_of(atkTarget, gameMap):
+                    attackEnemy(character, atkTarget)
+                else:
+                    if ccTarget:
+                        moveHero(character, ccTarget)
+                    else:
+                        moveHero(character, atkTarget)
             else:
                 target = getTarget("attack")
                 if target and character.in_range_of(target, gameMap):
                     attackEnemy(character, target)
-                else: # Not in range, move towards
+                else:
                     moveHero(character, target)
-    #If current character is Warrior
+        #If current character is Warrior
         if character.id % 3 in [0, 2]:
             if character.casting is None:
-                cast = False
-                target = getTarget("cc")
-                if target and character.in_range_of(target, gameMap) and character.abilities[1] == 0:
-                    castSkill(character, target, 1)
-                elif target and character.in_range_of(target, gameMap):
-                    target = getTarget("attack")
-                    attackEnemy(character, target)
-                else: # Not in range, move towards
-                    target = getTarget("attack")
-                    moveHero(character, target)
+                print "Warrior can smash rite?"
+                ccTarget = getTarget("cc")
+                atkTarget = getTarget("attack")
+                if ccTarget and character.in_range_of(ccTarget, gameMap) and character.abilities[1] == 0:
+                    castSkill(character, ccTarget, 1)
+                elif atkTarget and character.in_range_of(atkTarget, gameMap):
+                    attackEnemy(character, atkTarget)
+                else:
+                    if ccTarget:
+                        moveHero(character, ccTarget)
+                    else:
+                        moveHero(character, atkTarget)
             else:
                 target = getTarget("attack")
                 if target and character.in_range_of(target, gameMap):
