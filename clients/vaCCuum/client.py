@@ -16,6 +16,7 @@ gameMap = GameMap()
 
 # --------------------------- SET THIS IS UP -------------------------
 teamName = "vaCCuum"
+roundNum = 0
 # ---------------------------------------------------------------------
 
 # Set initial connection data
@@ -43,10 +44,12 @@ def isRooted(hero):
 def processTurn(serverResponse):
 # --------------------------- CHANGE THIS SECTION -------------------------
     # Setup helper variables
+    global roundNum
     actions = []
     myteam = []
     enemyteam = []
     enemyteamwithoutstun = []
+    roundNum += 1
 
     def healWeakest(hero, weakhero):
         actions.append({
@@ -126,12 +129,15 @@ def processTurn(serverResponse):
         #If current character is Paladin
         if character.classId == "Paladin":
             if character.casting is None:
-                print "We can cast rite?"
-                if character.attributes.health * 4 < 3 * character.attributes.maxHealth and character.abilities[3] == 0:
+                # print "We can cast rite?"
+                if character.attributes.health * 4 < 3 * character.attributes.maxHealth and character.abilities[3] == 0 and roundNum < 120:
                     castSkill(character, character, 3)
                     continue
                 ccTarget = getTarget("cc")
                 atkTarget = getTarget("attack")
+                if not ccTarget and not atkTarget:
+                    print "No target found!"
+                    continue
                 if ccTarget and character.in_ability_range_of(ccTarget, gameMap, 14) and character.abilities[14] == 0:
                     castSkill(character, ccTarget, 14)
                     enemyteamwithoutstun.remove(ccTarget)
@@ -151,7 +157,7 @@ def processTurn(serverResponse):
         #If current character is Warrior
         if character.classId == "Warrior":
             if character.casting is None:
-                print "Warrior can smash rite?"
+                # print "Warrior can smash rite?"
                 ccTarget = getTarget("cc")
                 atkTarget = getTarget("attack")
                 if ccTarget and character.in_ability_range_of(ccTarget, gameMap, 1, False) and character.abilities[1] == 0:
