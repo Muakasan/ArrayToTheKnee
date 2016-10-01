@@ -80,9 +80,9 @@ def processTurn(serverResponse):
     else:
         target = None
         if enemyteam:
-            sList = filter(lambda x: not x.is_dead(), sorted(enemyteam, key=lambda x:  manhattanDist(x, myteam[0])*10000 + x.attributes.health))
-            if sList:
-                target = sList[0]
+
+            sList = filter(lambda x: not x.is_dead(), sorted(enemyteam, key=lambda x:  manhattanDist(x, myteam[0])*10000 + x.attributes.health + (x.classId == "Paladin" or x.classId == "Druid")*-1000000))
+            target = sList[0]
         # If we found a target
         if target:
             for character in myteam:
