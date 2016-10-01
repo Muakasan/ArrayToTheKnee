@@ -15,13 +15,13 @@ from src.game.gamemap import *
 gameMap = GameMap()
 
 # --------------------------- SET THIS IS UP -------------------------
-teamName = "Test"
+teamName = "RushWarriors"
 # ---------------------------------------------------------------------
 
 # Set initial connection data
 def initialResponse():
 # ------------------------- CHANGE THESE VALUES -----------------------
-    return {'TeamName': "ArrayToTheKnee",
+    return {'TeamName': "RushWarriors",
             'Characters': [
                 {"CharacterName": "Warrior",
                  "ClassId": "Warrior"},

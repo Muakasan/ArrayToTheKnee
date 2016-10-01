@@ -16,12 +16,12 @@ from src.game.gamemap import *
 
 gameMap = GameMap()
 
-teamName = "ArrayToTheKnee"
+teamName = "DefaultArcher"
 
 # {{{ Team Composition Setup
 def initialResponse():
     return {
-        'TeamName': "arraytotheknee",
+        'TeamName': "DefaultArcher",
         'Characters': [ {
                 "CharacterName": "Legolas",
                 "ClassId": "Archer"
@@ -51,23 +51,31 @@ def getKiteLoc(hero, villain):
     if myPos == (0, 0):
         if vilPos[0] == 0:
             newX = 1
+            newY = 0
         elif vilPos[1] == 0:
             newY = 1
+            newX = 0
     elif myPos == (0, 4):
         if vilPos[0] == 0:
             newX = 1
+            newY = 4
         elif vilPos[1] == 4:
             newY = 3
+            newX = 0
     elif myPos == (4, 4):
         if vilPos[0] == 4:
             newX = 3
+            newY = 4
         elif vilPos[1] == 4:
             newY = 3
+            newX = 4
     elif myPos == (4, 0):
         if vilPos[0] == 4:
             newX = 3
+            newY = 0
         if vilPos[1] == 0:
             newY = 1
+            newX = 4
     return (newX, newY)
 
 def isStunned(hero):
@@ -118,15 +126,18 @@ def processTurn(serverResponse):
             # return True if 2 entities are in within the SMALLER range between
             # the 2 entities, not the largest...
             dist = manhattanDist(character, target)
-            print dist
+            # print dist
             if dist <= character.attributes.attackRange:
-                if 0 < dist and dist <= target.attributes.attackRange:
+                if 0 <= dist and dist < character.attributes.attackRange:
+                    # print "Moving"
+                    # print getKiteLoc(character, target)
                     actions.append({
                         "Action" : "Move",
-                        "Location" : getKiteLoc(character, target)
+                        "Location" : getKiteLoc(character, target),
+                        "CharacterId": character.id,
                     })
                 else:
-                    print "ATTACKING!!!!!"
+                    # print "ATTACKING!!!!!"
                     actions.append({
                         "Action": "Attack",
                         "CharacterId": character.id,
