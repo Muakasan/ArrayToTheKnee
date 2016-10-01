@@ -120,12 +120,12 @@ def processTurn(serverResponse):
     # If we found a target
     for character in myteam:
         #If current character is Paladin
-        if character.id % 3 == 1:
+        if character.classId == "Paladin":
             if character.casting is None:
                 print "We can cast rite?"
                 ccTarget = getTarget("cc")
                 atkTarget = getTarget("attack")
-                if ccTarget and character.in_ability_range_of(character, target, gameMap, 14) and character.abilities[14] == 0:
+                if ccTarget and character.in_ability_range_of(character, ccTarget, gameMap, 14) and character.abilities[14] == 0:
                     castSkill(character, ccTarget, 14)
                 elif atkTarget and character.in_range_of(atkTarget, gameMap):
                     attackEnemy(character, atkTarget)
@@ -141,12 +141,12 @@ def processTurn(serverResponse):
                 else:
                     moveHero(character, target)
         #If current character is Warrior
-        if character.id % 3 in [0, 2]:
+        if character.classId == "Warrior":
             if character.casting is None:
                 print "Warrior can smash rite?"
                 ccTarget = getTarget("cc")
                 atkTarget = getTarget("attack")
-                if ccTarget and character.in_ability_range_of(character, target, gameMap, 1) and character.abilities[1] == 0:
+                if ccTarget and character.in_ability_range_of(character, ccTarget, gameMap, 1) and character.abilities[1] == 0:
                     castSkill(character, ccTarget, 1)
                 elif atkTarget and character.in_range_of(atkTarget, gameMap):
                     attackEnemy(character, atkTarget)
