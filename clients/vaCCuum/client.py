@@ -114,28 +114,33 @@ def processTurn(serverResponse):
             return target
         elif key == "cc":
             for enemy in enemyteamwithoutstun:
+                if enemy.is_dead():
+                    continue
                 if not isStunned(enemy) and not isRooted(enemy):
                     return enemy
         return target
 
-    #Find lowest hp team member
-    weakcharacter = None
-    least_health = None
-    for character in myteam:
-        if character.is_dead():
-            continue
-        if least_health == None or character.attributes.health < least_health:
-            least_health = character.attributes.health
-            weakcharacter = character
-
     # If we found a target
     for character in myteam:
+
+        if character.is_dead():
+            continue
+
         #If current character is Paladin
         if character.classId == "Paladin":
             if character.casting is None:
-                # print "We can cast rite?"
-                if character.attributes.health * 4 < 3 * character.attributes.maxHealth and character.abilities[3] == 0 and roundNum < 120:
-                    castSkill(character, character, 3)
+
+                weakcharacter = None
+                least_health = None
+                for teammate in myteam:
+                    if teammate.is_dead():
+                        continue
+                    if least_health == None or teammate.attributes.health < least_health:
+                        least_health = teammate.attributes.health
+                        weakcharacter = teammate
+
+                if weakcharacter.attributes.health * 4 < 3 * weakcharacter.attributes.maxHealth and character.abilities[3] == 0 and roundNum < 120:
+                    castSkill(character, weakcharacter, 3)
                     continue
                 ccTarget = getTarget("cc")
                 atkTarget = getTarget("attack")
@@ -146,7 +151,8 @@ def processTurn(serverResponse):
                     castSkill(character, ccTarget, 14)
                     enemyteamwithoutstun.remove(ccTarget)
                 elif atkTarget and character.in_range_of(atkTarget, gameMap):
-                    if(willFinishCharacter(character, atkTarget)):
+                    if willFinishCharacter(character, atkTarget):
+                        print "Paladin about to kill!"
                         enemyteam.remove(atkTarget)
                     attackEnemy(character, atkTarget)
                 else:
@@ -167,10 +173,13 @@ def processTurn(serverResponse):
                 ccTarget = getTarget("cc")
                 atkTarget = getTarget("attack")
                 if ccTarget and character.in_ability_range_of(ccTarget, gameMap, 1, False) and character.abilities[1] == 0:
+                    print character.name, "CC"
                     castSkill(character, ccTarget, 1)
                     enemyteamwithoutstun.remove(ccTarget)
                 elif atkTarget and character.in_range_of(atkTarget, gameMap):
-                    if(willFinishCharacter(character, atkTarget)):
+                    print character.name, "ATTACK"
+                    if willFinishCharacter(character, atkTarget):
+                        print "Warrior about to kill!"
                         enemyteam.remove(atkTarget)
                     attackEnemy(character, atkTarget)
                 else:
