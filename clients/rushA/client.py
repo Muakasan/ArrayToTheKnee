@@ -54,51 +54,71 @@ def processTurn(serverResponse):
 # ------------------ You shouldn't change above but you can ---------------
     
     # Choose the lowest HP target
+   
+    '''
     target = None
     least_health = None
     for character in enemyteam:
-        if character.is_dead():
-            continue
-        if least_health == None or character.attributes.health < least_health:
-            least_health = character.attributes.health
-            target = character	
-    
-    # If we found a target
-    if target:
-        for character in myteam:
-            # If I am in range, either move towards target
-            if character.in_range_of(target, gameMap):
-                if character.casting is None:
-		    cast = False
-	            if character.abilities[11] == 0:
-		          actions.append({
-		               "Action": "Cast",
-		   	       "CharacterId": character.id,
-			       "TargetId": target.id,
-			       "AbilityId": 11,
-			       })
-                    else:
-		         actions.append({
-                              "Action": "Attack",
-		              "CharacterId": character.id,
-		              "TargetId": target.id,
-		         })
-            else: # Not in range, move towards
-                if character.casting is None:
-		     cast = False
-	             if character.abilities[12] == 0:
-	                  actions.append({
-		               "Action": "Cast",
-		               "CharacterId": character.id,
-			       "TargetId": character.id,
-			       "AbilityId": 12,
-			  })
-		     else:
-		          actions.append({
-                               "Action": "Move",
-                               "CharacterId": character.id,
-                               "TargetId": target.id,
-                          })
+      if character.is_dead():
+          continue
+      if least_health == None or character.attributes.health < least_health:
+          least_health = character.attributes.health
+          target = character	
+    '''
+
+    def manhattanDist(hero1, hero2): # Cuz DotA > League
+        pos1 = hero1.position
+        pos2 = hero2.position
+        return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
+    if (character.attributes.get_attribute("Stunned") or character.attributes.get_attribute("Rooted")) and character.abilities[0] == 0:
+        actions.append({
+            "Action": "Cast",
+            "CharacterId": character.id,
+            "TargetId": character.id,
+            "AbilityId": 0
+            })
+    else:
+        target = None
+        if enemyteam:
+            sList = filter(lambda x: not x.is_dead(), sorted(enemyteam, key=lambda x:  float(str(manhattanDist(x, myteam[0])) + "." + str(x.attributes.health))))
+            if sList:
+                target = sList[0]
+        # If we found a target
+        if target:
+            for character in myteam:
+                # If I am in range, either move towards target
+                if character.in_range_of(target, gameMap):
+                    if character.casting is None:
+                        cast = False
+                        if character.abilities[11] == 0:
+                              actions.append({
+                                   "Action": "Cast",
+                                   "CharacterId": character.id,
+                                   "TargetId": target.id,
+                                   "AbilityId": 11,
+                                   })
+                        else:
+                             actions.append({
+                                  "Action": "Attack",
+                                  "CharacterId": character.id,
+                                  "TargetId": target.id,
+                             })
+                else: # Not in range, move towards
+                    if character.casting is None:
+                         cast = False
+                         if character.abilities[12] == 0:
+                              actions.append({
+                                   "Action": "Cast",
+                                   "CharacterId": character.id,
+                                   "TargetId": character.id,
+                                   "AbilityId": 12,
+                              })
+                         else:
+                              actions.append({
+                                   "Action": "Move",
+                                   "CharacterId": character.id,
+                                   "TargetId": target.id,
+                              })
 
     # Send actions to the server
     return {
