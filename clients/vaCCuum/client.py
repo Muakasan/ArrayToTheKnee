@@ -46,6 +46,7 @@ def processTurn(serverResponse):
     actions = []
     myteam = []
     enemyteam = []
+    enemyteamwithoutstun = []
 
     def healWeakest(hero, weakhero):
         actions.append({
@@ -89,22 +90,26 @@ def processTurn(serverResponse):
                 character = Character()
                 character.serialize(characterJson)
                 enemyteam.append(character)
+                enemyteamwithoutstun.append(character)
 # ------------------ You shouldn't change above but you can ---------------
 
     # Choose a target
     def getTarget(key):
         target = None
         least_health = None
-        for character in enemyteam:
-            if character.is_dead():
-                continue
-            if key == "attack":
-                if least_health == None or character.attributes.health < least_health:
-                    least_health = character.attributes.health
-                    target = character
-            elif key == "cc":
-                if not isStunned(character) and not isRooted(character):
-                    return character
+        if key == "attack":
+            for enemy in enemyteam:
+                if enemy.is_dead():
+                    continue
+                if least_health == None or enemy.attributes.health < least_health:
+                    least_health = enemy.attributes.health
+                    target = enemy
+            return target
+        elif key == "cc":
+            for enemy in enemyteamwithoutstun:
+                if not isStunned(enemy) and not isRooted(enemy):
+                    enemyteamwithoutstun.remove(enemy)
+                    return enemy
         return target
 
     #Find lowest hp team member
