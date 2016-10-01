@@ -51,6 +51,10 @@ def processTurn(serverResponse):
     enemyteamwithoutstun = []
     roundNum += 1
 
+    def willFinishCharacter(ally, enemy):
+        damagedone = ally.attributes.damage - enemy.attributes.armor
+        return enemy.attributes.health < damagedone
+
     def healWeakest(hero, weakhero):
         actions.append({
             "Action": "Cast",
@@ -142,6 +146,8 @@ def processTurn(serverResponse):
                     castSkill(character, ccTarget, 14)
                     enemyteamwithoutstun.remove(ccTarget)
                 elif atkTarget and character.in_range_of(atkTarget, gameMap):
+                    if(willFinishCharacter(character, atkTarget)):
+                        enemyteam.remove(atkTarget)
                     attackEnemy(character, atkTarget)
                 else:
                     if ccTarget:
@@ -164,6 +170,8 @@ def processTurn(serverResponse):
                     castSkill(character, ccTarget, 1)
                     enemyteamwithoutstun.remove(ccTarget)
                 elif atkTarget and character.in_range_of(atkTarget, gameMap):
+                    if(willFinishCharacter(character, atkTarget)):
+                        enemyteam.remove(atkTarget)
                     attackEnemy(character, atkTarget)
                 else:
                     if ccTarget:
