@@ -15,7 +15,7 @@ from src.game.gamemap import *
 gameMap = GameMap()
 
 # --------------------------- SET THIS IS UP -------------------------
-teamName = "ArrayToTheKnee"
+teamName = "Test"
 # ---------------------------------------------------------------------
 
 # Set initial connection data
@@ -23,12 +23,12 @@ def initialResponse():
 # ------------------------- CHANGE THESE VALUES -----------------------
     return {'TeamName': teamName,
             'Characters': [
-                {"CharacterName": "Archer1",
+                {"CharacterName": "Druid",
+                 "ClassId": "Druid"},
+                {"CharacterName": "Archer",
                  "ClassId": "Archer"},
-                {"CharacterName": "Archer2",
-                 "ClassId": "Archer"},
-                {"CharacterName": "Archer3",
-                 "ClassId": "Archer"},
+                {"CharacterName": "Warrior",
+                 "ClassId": "Warrior"},
             ]}
 # ---------------------------------------------------------------------
 
@@ -63,10 +63,10 @@ def processTurn(serverResponse):
     # If we found a target
     if target:
         for character in myteam:
+            # If I am in range, either move towards target
             if character.in_range_of(target, gameMap):
-                diffpos = ( abs(character.position[0] - target.position[0]),
-                        abs(character.position[1] - target.position[1]) )
-                if diffpos[0]+diffpos[1] == 1 or (diffpos[0] == 1 and diffpos[1] == 1):
+                # Am I already trying to cast something?
+                if character.casting is None:
                     cast = False
                     for abilityId, cooldown in character.abilities.items():
                         # Do I have an ability not on cooldown
