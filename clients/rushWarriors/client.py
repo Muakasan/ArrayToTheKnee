@@ -21,14 +21,14 @@ teamName = "Test"
 # Set initial connection data
 def initialResponse():
 # ------------------------- CHANGE THESE VALUES -----------------------
-    return {'TeamName': arraytotheknee,
+    return {'TeamName': "ArrayToTheKnee",
             'Characters': [
-                {"CharacterName": "Archer1",
-                 "ClassId": "Archer"},
-                {"CharacterName": "Archer2",
-                 "ClassId": "Archer"},
-                {"CharacterName": "Archer3",
-                 "ClassId": "Archer"},
+                {"CharacterName": "Warrior",
+                 "ClassId": "Warrior"},
+                {"CharacterName": "Warrior",
+                 "ClassId": "Warrior"},
+                {"CharacterName": "Warrior",
+                 "ClassId": "Warrior"},
             ]}
 # ---------------------------------------------------------------------
 
@@ -63,32 +63,13 @@ def processTurn(serverResponse):
     # If we found a target
     if target:
         for character in myteam:
+            # If I am in range, attack
             if character.in_range_of(target, gameMap):
-                diffpo =abs(self.position-target.position)
-                if diffpos[0]+diffpos[1] == 1 or (diffpos[0] == 1 and diffpos[1] == 1):
-                    cast = False
-                    for abilityId, cooldown in character.abilities.items():
-                        # Do I have an ability not on cooldown
-                        if cooldown == 0:
-                            # If I can, then cast it
-                            ability = game_consts.abilitiesList[int(abilityId)]
-                            # Get ability
-                            actions.append({
-                                "Action": "Cast",
-                                "CharacterId": character.id,
-                                # Am I buffing or debuffing? If buffing, target myself
-                                "TargetId": target.id if ability["StatChanges"][0]["Change"] < 0 else character.id,
-                                "AbilityId": int(abilityId)
-                            })
-                            cast = True
-                            break
-                    # Was I able to cast something? Either wise attack
-                    if not cast:
-                        actions.append({
-                            "Action": "Attack",
-                            "CharacterId": character.id,
-                            "TargetId": target.id,
-                        })
+                   actions.append({
+                       "Action": "Attack",
+                       "CharacterId": character.id,
+                       "TargetId": target.id
+                     })
             else: # Not in range, move towards
                 actions.append({
                     "Action": "Move",
