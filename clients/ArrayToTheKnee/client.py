@@ -153,7 +153,7 @@ def processTurn(serverResponse):
                             weakcharacter = teammate
 
                     if weakcharacter.attributes.health * 4 < 3 * weakcharacter.attributes.maxHealth and character.abilities[3] == 0 and roundNum < 120 and not isSilenced(character):
-                        castSkill(character, weakcharacter, 3)
+                        healWeakest(character, weakcharacter)
                         continue
                     ccTarget = getTarget("cc")
                     atkTarget = getTarget("attack")

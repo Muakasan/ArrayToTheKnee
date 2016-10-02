@@ -95,8 +95,8 @@ def processTurn(serverResponse):
     # Choose a target
     # Choose the lowest HP target
     def getTarget(key):
-        target = None
-        random.shuffle(enemyteam)
+        target = enemyteam[0]
+        #random.shuffle(enemyteam)
         if enemyteam[0].is_dead():
             target = enemyteam[1]
             if enemyteam[1].is_dead():
