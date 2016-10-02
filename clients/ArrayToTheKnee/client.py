@@ -24,12 +24,12 @@ def initialResponse():
 # ------------------------- CHANGE THESE VALUES -----------------------
     return {'TeamName': teamName,
             'Characters': [
-                {"CharacterName": "Kayle",
-                 "ClassId": "Paladin"},
-                {"CharacterName": "Garen",
+                {"CharacterName": "Array",
                  "ClassId": "Warrior"},
-                {"CharacterName": "Darius",
+                {"CharacterName": "To The",
                  "ClassId": "Warrior"},
+                {"CharacterName": "Knee!",
+                 "ClassId": "Paladin"}
             ]}
 # ---------------------------------------------------------------------
 #My helper functions
