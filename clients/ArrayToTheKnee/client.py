@@ -15,7 +15,7 @@ from src.game.gamemap import *
 gameMap = GameMap()
 
 # --------------------------- SET THIS IS UP -------------------------
-teamName = "vaCCuum"
+teamName = "ArrayToTheKnee"
 roundNum = 0
 # ---------------------------------------------------------------------
 
