@@ -34,6 +34,9 @@ def initialResponse():
 # ---------------------------------------------------------------------
 #My helper functions
 
+def isSilenced(hero):
+    return hero.attributes.get_attribute("Silenced")
+
 def isStunned(hero):
     return hero.attributes.get_attribute("Stunned")
 
@@ -61,14 +64,14 @@ def processTurn(serverResponse):
             "CharacterId": hero.id,
             "TargetId": weakhero.id,
             "AbilityId": 3,
-             })
+        })
 
     def attackEnemy(hero, enemy):
         actions.append({
             "Action": "Attack",
             "CharacterId": hero.id,
             "TargetId": enemy.id,
-             })
+        })
 
     def castSkill(hero, enemy, num):
         actions.append({
@@ -76,14 +79,14 @@ def processTurn(serverResponse):
             "CharacterId": hero.id,
             "TargetId": enemy.id if game_consts.abilitiesList[num]["StatChanges"][0]["Change"] < 0 else hero.id,
             "AbilityId": num,
-             })
+        })
 
     def moveHero(hero, enemy):
         actions.append({
             "Action": "Move",
             "CharacterId": hero.id,
             "TargetId": enemy.id,
-             })
+        })
 
     # Find each team and serialize the objects
     for team in serverResponse["Teams"]:
@@ -127,8 +130,8 @@ def processTurn(serverResponse):
 
         if character.is_dead():
             continue
-        
-        if (character.attributes.get_attribute("Stunned") or character.attributes.get_attribute("Rooted")) and character.abilities[0] == 0:               
+
+        if (isStunned(character) or isRooted(character)) and character.abilities[0] == 0:
             actions.append({
                 "Action": "Cast",
                 "CharacterId": character.id,
@@ -149,20 +152,20 @@ def processTurn(serverResponse):
                             least_health = teammate.attributes.health
                             weakcharacter = teammate
 
-                    if weakcharacter.attributes.health * 4 < 3 * weakcharacter.attributes.maxHealth and character.abilities[3] == 0 and roundNum < 120:
+                    if weakcharacter.attributes.health * 4 < 3 * weakcharacter.attributes.maxHealth and character.abilities[3] == 0 and roundNum < 120 and not isSilenced(character):
                         castSkill(character, weakcharacter, 3)
                         continue
                     ccTarget = getTarget("cc")
                     atkTarget = getTarget("attack")
                     if not ccTarget and not atkTarget:
-                        print "No target found!"
+                        # print "No target found!"
                         continue
                     if ccTarget and character.in_ability_range_of(ccTarget, gameMap, 14) and character.abilities[14] == 0:
                         castSkill(character, ccTarget, 14)
                         enemyteamwithoutstun.remove(ccTarget)
                     elif atkTarget and character.in_range_of(atkTarget, gameMap):
                         if willFinishCharacter(character, atkTarget):
-                            print "Paladin about to kill!"
+                            # print "Paladin about to kill!"
                             enemyteam.remove(atkTarget)
                         attackEnemy(character, atkTarget)
                     else:
@@ -182,14 +185,17 @@ def processTurn(serverResponse):
                     # print "Warrior can smash rite?"
                     ccTarget = getTarget("cc")
                     atkTarget = getTarget("attack")
-                    if ccTarget and character.in_ability_range_of(ccTarget, gameMap, 1, False) and character.abilities[1] == 0:
-                        print character.name, "CC"
+                    if not ccTarget and not atkTarget:
+                        # print "No target found!"
+                        continue
+                    if ccTarget and character.in_ability_range_of(ccTarget, gameMap, 1, False) and character.abilities[1] == 0 and not isSilenced(character):
+                        # print character.name, "CC"
                         castSkill(character, ccTarget, 1)
                         enemyteamwithoutstun.remove(ccTarget)
                     elif atkTarget and character.in_range_of(atkTarget, gameMap):
-                        print character.name, "ATTACK"
+                        # print character.name, "ATTACK"
                         if willFinishCharacter(character, atkTarget):
-                            print "Warrior about to kill!"
+                            # print "Warrior about to kill!"
                             enemyteam.remove(atkTarget)
                         attackEnemy(character, atkTarget)
                     else:
